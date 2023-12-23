@@ -16,7 +16,8 @@ use std::time::Duration;
 use std::time::SystemTime;
 pub mod texture_manager;
 pub mod engine;
-use engine::Engine;
+// use std::str::FromStr;
+
 
 const SQUARE_SIZE:u32 = 100;
 
@@ -24,6 +25,7 @@ fn main() -> Result<(), String> {
     rayon::ThreadPoolBuilder::new().num_threads(18).build_global().unwrap();
     
     let mut brett = chess::Board::default();
+    // let mut brett = chess::Board::from_str("4k3/1r6/3q4/8/8/8/5Q2/4K3 w - - 0 1").unwrap();
     let mut fifty_move_counter: u8 = 0;
 
     let sdl_context = sdl2::init().unwrap();
@@ -87,12 +89,12 @@ fn main() -> Result<(), String> {
                         legal_moves.push((m.0.get_source().get_file().to_index() as i32, m.0.get_source().get_rank().to_index() as i32));
                         legal_moves.push((m.0.get_dest().get_file().to_index() as i32, m.0.get_dest().get_rank().to_index() as i32));
                         fifty_move_counter = m.1;
-                    } else if !calulation_running {
+                    } else if !calulation_running && brett.side_to_move() == chess::Color::Black {
                         calulation_running = true;
                         (tx, rx) = std::sync::mpsc::channel();
                         thread::spawn(move || {
-                            let engine = Engine::new(brett);
-                            let m = engine.best_move(fifty_move_counter, 4, 12, 1_000_000_000 / 8, SystemTime::now()); 
+                            let engine = engine::Engine::new(brett);
+                            let m = engine.best_move(fifty_move_counter, 4, 10, 1_000_000_000 / 8, SystemTime::now()); 
                             tx.send(m).unwrap();
                         });
                     }
